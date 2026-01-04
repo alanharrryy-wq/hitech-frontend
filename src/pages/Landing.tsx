@@ -20,7 +20,7 @@ export default function Landing() {
   const [mods, setMods] = useState<Mod[]>([]);
 
   useEffect(() => {
-    fetch('/modules.config.json')
+    fetch(`${import.meta.env.BASE_URL}modules.config.json`)
       .then(r => r.json())
       .then((cfg: ModConfig) => setMods((cfg.modules || []).filter(m => m.enabled)))
       .catch(() => setMods([]));

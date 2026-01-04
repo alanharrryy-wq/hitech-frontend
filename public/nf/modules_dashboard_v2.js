@@ -39,7 +39,7 @@ document.addEventListener('input', (e)=>{
 
 async function loadConfig(){
   try{
-    const res = await fetch('/modules.config.json', {cache:'no-store'});
+    const res = await fetch(new URL('modules.config.json', document.baseURI).toString(), {cache:'no-store'});
     const cfg = await res.json();
     const grid = document.getElementById('nf-grid'); grid.innerHTML='';
     const perCard = prefs.perCard || {};

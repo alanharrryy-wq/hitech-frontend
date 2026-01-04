@@ -15,7 +15,7 @@ export interface ModuleDef {
 }
 export async function loadRegistry(): Promise<ModuleDef[]> {
   try{
-    const res = await fetch('/modules.config.json', { cache:'no-store' });
+    const res = await fetch(`${import.meta.env.BASE_URL}modules.config.json`, { cache:'no-store' });
     if(!res.ok) throw new Error('modules.config.json not found');
     const raw = await res.json();
     const list = Array.isArray(raw) ? raw : (raw?.modules || []);
