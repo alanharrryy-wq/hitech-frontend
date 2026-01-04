@@ -1,0 +1,9 @@
+# Modules UI — Drop-in kit (React/Vite)
+## Copia estos archivos en tu frontend:
+- `public/modules.config.json`
+- `src/modules.registry.ts`
+- `src/components/OlympusCard.tsx`
+- `src/pages/ModulesDashboard.tsx`
+- `src/styles/olympus.css`
+## Integra la ruta `/modules`
+Si usas React Router, en tu `src/App.tsx` añade la ruta a ModulesDashboard y el link de menú.

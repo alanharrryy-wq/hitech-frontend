@@ -1,0 +1,36 @@
+:root{
+  /* espacio reservado para el FAB/botón inferior derecho */
+  --nf-safe-corner: 104px;
+}
+
+/* Intenta cubrir las variantes conocidas del overlay (nf/olympus/clean&neon) */
+.nf-overlay,
+.olympus-overlay,
+div[id*="overlay"][id*="olympus"],
+div[class*="overlay"][class*="olympus"],
+div[id*="nf-overlay"],
+div[class*="nf-overlay"],
+[data-olympus-overlay],
+[data-nf-overlay]{
+  position: fixed !important;
+  right: 24px !important;
+  bottom: var(--nf-safe-corner) !important;
+  z-index: 1000 !important;
+  max-width: min(380px, 92vw);
+  pointer-events: auto;
+  backdrop-filter: blur(2px);
+}
+
+/* Asegura que cualquier FAB de módulos tenga prioridad visual */
+#mods-fab, .mods-fab, [data-mods-fab]{
+  z-index: 1001 !important;
+  margin-bottom: 8px !important;
+}
+
+@media (max-width: 768px){
+  :root{ --nf-safe-corner: 136px; }
+}
+
+/* Evita que el contenido quede escondido tras el overlay en pantallas chicas */
+html, body, #root{ min-height: 100%; }
+body{ padding-bottom: 8px; }

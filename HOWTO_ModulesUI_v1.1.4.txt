@@ -1,0 +1,16 @@
+# Modules UI — Drop-in kit (React/Vite) v1.1.4
+1) Copia:
+- public/modules.config.json
+- src/modules.registry.ts
+- src/components/OlympusCard.tsx
+- src/pages/ModulesDashboard.tsx
+- src/styles/olympus.css
+
+2) Ruta /modules: este paquete trae script apply que lo inserta.
+
+3) Si tu proyecto aún no usa React Router:
+   npm i react-router-dom
+   Reinicia el dev server.
+
+Extra:
+- Puedes marcar estado simulado con statusUrl: "mock:ok" o "mock:err".

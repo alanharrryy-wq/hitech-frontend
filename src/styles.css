@@ -1,0 +1,81 @@
+
+:root {
+  --accent: #00ffff;
+  --glass-alpha: 0.45;
+  --glow: 12px;
+  --bg: #080c12;
+  --text: #e6fbff;
+
+  /* Per-column colors (editable) */
+  --col-todo: #00eaff;
+  --col-doing: #ff64ff;
+  --col-done: #ffb74d;
+}
+
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; margin: 0; background: var(--bg); color: var(--text); font-family: Inter, system-ui, Arial; }
+a { color: #6ef; }
+
+.glass {
+  background: rgba(15,15,20,var(--glass-alpha));
+  border: 1px solid rgba(255,255,255,0.08);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 12px;
+}
+
+.neon-border { box-shadow: 0 0 var(--glow) var(--accent, #00ffff); }
+.neon-border-soft { box-shadow: 0 0 calc(var(--glow) * 0.66) var(--accent, #00ffff); }
+
+.topbar {
+  position: fixed; left: 20px; right: 20px; top: 20px; z-index: 10;
+  padding: 12px 16px; display: flex; align-items: center; gap: 12px;
+}
+
+.grid {
+  position: relative; z-index: 2;
+  padding: 96px 24px 24px;
+  max-width: 1200px; margin: 0 auto;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+}
+
+.card { padding: 14px; border-radius: 12px; }
+
+.task {
+  padding: 10px 10px 14px 10px;
+  border-radius: 10px;
+  transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+  background: rgba(255,255,255,0.02);
+}
+.task:hover { transform: translateY(-2px); background: rgba(255,255,255,0.04); }
+
+.task-title { font-size: 14px; opacity: .95; }
+.task-meta { font-size: 12px; opacity: .65; display: flex; gap: 10px; margin-top: 4px; }
+
+/* Progress bar: only bar has frame */
+.progress-outer {
+  margin-top: 10px;
+  height: 10px;
+  border-radius: 999px;
+  padding: 2px;
+  background: rgba(255,255,255,0.06);
+  box-shadow: 0 0 10px rgba(0,0,0,0.4), inset 0 0 8px rgba(0,0,0,0.4);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.progress-inner {
+  height: 100%;
+  border-radius: 999px;
+  background-image: linear-gradient(90deg, var(--barA), var(--barB));
+  box-shadow: 0 0 8px var(--barB);
+  transition: width .3s ease;
+}
+
+.column { display: flex; flex-direction: column; gap: 10px; }
+.col-title { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; opacity: .7; margin-bottom: 6px; }
+
+.badge { padding: 2px 8px; border-radius: 999px; font-size: 10px; background: rgba(255,255,255,0.06); }
+
+/* Modes */
+body[data-mode="night"] { filter: brightness(0.9); }
+body[data-mode="panic"] { filter: saturate(1.2); }
+body[data-mode="focus"] { filter: contrast(1.05) brightness(1.05); }

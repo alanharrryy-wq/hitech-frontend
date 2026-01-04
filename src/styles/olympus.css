@@ -1,0 +1,11 @@
+:root{--bg:#0b0f17; --panel:#111827; --primary:#00f5d4; --accent:#7c3aed; --ok:#2dd4bf; --warn:#ff4d4d; --text:#e5e7eb;}
+body{background:var(--bg); color:var(--text); font-family: Inter, Segoe UI, system-ui, -apple-system, sans-serif;}
+.olympus-panel{background:var(--panel); border-radius:14px; padding:20px; position:relative; box-shadow:0 0 0 1px #0d1320, 0 0 24px #0ff2;}
+.neon{box-shadow: 0 0 0 1px rgba(124,58,237,.6), 0 0 18px rgba(0,245,212,.35);}
+.card{background:#0e1422; border:1px solid #223; border-radius:10px; padding:14px;}
+.btn{background:transparent; border:1px solid var(--accent); color:var(--text); border-radius:8px; padding:8px 12px; cursor:pointer;}
+.btn:hover{box-shadow:0 0 14px rgba(124,58,237,.55);}
+.grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(260px,1fr)); gap:14px;}
+.badge{font-size:12px; padding:2px 8px; border-radius:999px; border:1px solid #345; color:#cbd5e1}
+.badge.ok{border-color:var(--ok); color:var(--ok)}
+.badge.err{border-color:var(--warn); color:var(--warn)}

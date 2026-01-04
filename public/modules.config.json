@@ -1,0 +1,31 @@
+{
+  "version": "v6.0.0",
+  "modules": [
+    {
+      "enabled": true,
+      "id": "ares.panel",
+      "name": "Ares Panel (Web)",
+      "type": "web",
+      "route": "/ares",
+      "url": "http://127.0.0.1:8000/docs",
+      "color": "#00F5D4",
+      "healthUrl": "http://127.0.0.1:8000/health",
+      "demoUrl": "https://petstore.swagger.io/",
+      "description": "Panel operativo de ARES. En local se conecta al backend; en demo muestra una vista pública de referencia.",
+      "renderMode": "iframe"
+    },
+    {
+      "enabled": true,
+      "id": "olimpo5.web",
+      "name": "Olimpo 5 (Web)",
+      "type": "web",
+      "route": "/olimpo5",
+      "url": "http://127.0.0.1:8000/docs",
+      "color": "#7C3AED",
+      "healthUrl": "http://127.0.0.1:8000/health",
+      "demoUrl": "https://petstore.swagger.io/",
+      "description": "Módulo Olimpo5 (Web). Si no hay backend local, se muestra un panel offline con accesos de demostración.",
+      "renderMode": "iframe"
+    }
+  ]
+}

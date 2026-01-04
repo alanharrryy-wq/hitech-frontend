@@ -1,0 +1,38 @@
+
+/* Olympus Tech minimal glow pack v1.1.0 */
+:root{
+  --nf-glow-color-main:#8A2BE2; /* purple */
+  --nf-glow-color-alt:#00E5FF;  /* cyan   */
+  --nf-glow-intensity:0.6;
+  --nf-overlay-alpha:0.25;
+}
+/* Neon border helper */
+.neon-border-soft{
+  box-shadow: 0 0 calc(20px * var(--nf-glow-intensity)) var(--nf-glow-color-main),
+              inset 0 0 1px rgba(255,255,255,0.12);
+  border:1px solid rgba(138,43,226,0.35);
+  border-radius: 12px;
+}
+
+/* Floating FAB */
+#nf-olympus-tech-btn{
+  position:fixed; right:22px; bottom:22px; z-index:2147483000;
+  width:42px; height:42px; border-radius:10px; cursor:pointer;
+  background: radial-gradient(60% 60% at 50% 50%, rgba(138,43,226,0.9), rgba(0,229,255,0.9));
+  box-shadow: 0 0 18px rgba(0,229,255,0.8), 0 0 28px rgba(138,43,226,0.7);
+  border:1px solid rgba(255,255,255,0.15);
+  outline: none;
+}
+#nf-olympus-tech-btn:hover{ transform: translateY(-1px); }
+#nf-olympus-tech-panel{
+  position:fixed; right:22px; bottom:76px; width:360px; max-height:70vh; overflow:auto;
+  padding:14px; border-radius:12px; backdrop-filter: blur(6px);
+  background: rgba(14,15,18,0.86); color:#E6EAEE; z-index:2147483001; display:none;
+  border:1px solid rgba(0,229,255,0.25);
+  box-shadow: 0 0 24px rgba(0,229,255,0.4);
+  font-family: system-ui, Segoe UI, Roboto, sans-serif;
+}
+#nf-olympus-tech-panel h3{margin:0 0 10px 0; font-size:14px; letter-spacing:.3px; color:#8EEBFF}
+#nf-olympus-tech-panel .row{display:flex; align-items:center; gap:10px; margin:8px 0;}
+#nf-olympus-tech-panel label{font-size:12px; opacity:.85; width:120px}
+#nf-olympus-tech-panel input[type="range"]{flex:1}

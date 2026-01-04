@@ -1,0 +1,8 @@
+
+:root{
+  --glass-alpha: 0.36;           /* cuerpo */
+  --glass-topbar-alpha: 0.26;    /* consola/topbar más transparente */
+}
+/* refuerzos de glass para tarjetas */
+.glass-strong { background: rgba(15,15,20,var(--glass-alpha)); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.topbar.glass { background: rgba(15,15,20,var(--glass-topbar-alpha)); }

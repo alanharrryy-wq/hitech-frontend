@@ -1,0 +1,54 @@
+:root{
+  --col-todo:#00eaff; --col-doing:#ff64ff; --col-done:#ffb74d;
+  --accent:#00ffff; --glow:14; --glass-alpha:.32; --glass-topbar-alpha:.22;
+}
+.topbar.glass{
+  background:rgba(15,15,22,var(--glass-topbar-alpha));
+  backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+  border-bottom:1px solid rgba(255,255,255,.06);
+  box-shadow:0 6px 40px rgba(0,0,0,.35), 0 0 calc(var(--glow)*1px) var(--accent);
+}
+.card.glass,.panel.glass,.dialog.glass{
+  background:rgba(20,20,26,var(--glass-alpha));
+  backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,.06);
+  /* glow clásico + refuerzo (fallback si browser no soporta color-mix) */
+  box-shadow:
+    0 8px 60px rgba(0,0,0,.35),
+    0 0 calc(var(--glow)*1px) var(--accent),
+    0 0 calc(var(--glow)*2px) rgba(0,255,255,.35);
+}
+.neon-border-soft{
+  border:1px solid rgba(255,255,255,.07);
+  box-shadow:
+    0 0 calc(var(--glow)*.8px) var(--accent),
+    inset 0 0 calc(var(--glow)*.5px) rgba(255,255,255,.06);
+}
+.board .column.todo .header{
+  border-bottom:2px solid var(--col-todo);
+  box-shadow:0 0 calc(var(--glow)*1px) var(--col-todo);
+}
+.board .column.doing .header{
+  border-bottom:2px solid var(--col-doing);
+  box-shadow:0 0 calc(var(--glow)*1px) var(--col-doing);
+}
+.board .column.done .header{
+  border-bottom:2px solid var(--col-done);
+  box-shadow:0 0 calc(var(--glow)*1px) var(--col-done);
+}
+.progress{ height:8px; border-radius:8px; overflow:hidden }
+.progress.todo{
+  background:linear-gradient(90deg, var(--col-todo), #9beafe);
+  border:1px solid rgba(0,234,255,.6);
+  box-shadow:0 0 calc(var(--glow)*1px) var(--col-todo);
+}
+.progress.doing{
+  background:linear-gradient(90deg, var(--col-doing), #ffb4ff);
+  border:1px solid rgba(255,100,255,.6);
+  box-shadow:0 0 calc(var(--glow)*1px) var(--col-doing);
+}
+.progress.done{
+  background:linear-gradient(90deg, var(--col-done), #ffd9a0);
+  border:1px solid rgba(255,183,77,.6);
+  box-shadow:0 0 calc(var(--glow)*1px) var(--col-done);
+}

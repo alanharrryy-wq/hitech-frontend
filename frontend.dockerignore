@@ -1,0 +1,12 @@
+# .dockerignore (frontend) - v1.2.0
+node_modules/
+dist/
+build/
+.cache/
+.git/
+.gitignore
+.env
+.env.*
+logs/
+*.log
+.DS_Store
