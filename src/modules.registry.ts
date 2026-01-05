@@ -13,7 +13,7 @@ export interface ModuleDef {
   description?: string;
   renderMode?: 'iframe' | 'tab';
 }
-export async function loadRegistry(): Promise<ModuleDef[]> {
+export async function loadRegistry(options?: { strict?: boolean }): Promise<ModuleDef[]> {
   try{
     const res = await fetch(`${import.meta.env.BASE_URL}modules.config.json`, { cache:'no-store' });
     if(!res.ok) throw new Error('modules.config.json not found');
@@ -30,6 +30,7 @@ export async function loadRegistry(): Promise<ModuleDef[]> {
     }));
   }catch(e){
     console.warn('Module registry missing', e);
+    if (options?.strict) throw e;
     return [];
   }
 }
