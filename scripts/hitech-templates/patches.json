@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "patches": [
+    {
+      "id": "fix-chat-context-script",
+      "description": "Reescribe docs/Context_ChatGPT/Get-HitechChatContext.ps1 desde template para evitar corrupción.",
+      "enabled": true,
+      "files": [
+        {
+          "path": "docs/Context_ChatGPT/Get-HitechChatContext.ps1",
+          "action": "writeFromTemplate",
+          "template": "templates/Get-HitechChatContext.ps1"
+        }
+      ]
+    },
+    {
+      "id": "add-run-context-wrapper",
+      "description": "Agrega docs/Context_ChatGPT/RUN_Context.ps1 que corre patcher + genera contexto.",
+      "enabled": true,
+      "files": [
+        {
+          "path": "docs/Context_ChatGPT/RUN_Context.ps1",
+          "action": "writeFromTemplate",
+          "template": "templates/RUN_Context.ps1"
+        }
+      ]
+    },
+    {
+      "id": "engine-v2-surgeon-oneshot-glossary",
+      "description": "Upgrade hitech-templates engine: oneshot builder (Node), ONE_SHOT.ps1 (clipboard-safe), glossary + Patches workspace. (El patcher self-update se maneja en engine-v2-patcher-self-once).",
+      "enabled": true,
+      "files": [
+        {
+          "path": "scripts/hitech-templates/oneshot.mjs",
+          "action": "writeFromTemplate",
+          "template": "templates/oneshot.mjs"
+        },
+        {
+          "path": "scripts/hitech-templates/ONE_SHOT.ps1",
+          "action": "writeFromTemplate",
+          "template": "templates/ONE_SHOT.ps1"
+        },
+        {
+          "path": "scripts/hitech-templates/glossary.json",
+          "action": "writeFromTemplate",
+          "template": "templates/glossary.json"
+        },
+        {
+          "path": "scripts/hitech-templates/Patches/README.md",
+          "action": "writeFromTemplate",
+          "template": "templates/Patches/README.md"
+        }
+      ]
+    }
+  ]
+}

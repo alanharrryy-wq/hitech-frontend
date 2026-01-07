@@ -1,0 +1,12 @@
+{
+  "id": "patch-20260107_065152-scripts-hitech-templates-templates-patcher-mjs",
+  "description": "patcher.mjs: fix idempotent applyWriteFromTemplate + tplRel normalize + log shims + sameText",
+  "enabled": true,
+  "files": [
+    {
+      "path": "scripts/hitech-templates/templates/patcher.mjs",
+      "action": "writeFromTemplate",
+      "template": "scripts/hitech-templates/templates/patcher.mjs"
+    }
+  ]
+}

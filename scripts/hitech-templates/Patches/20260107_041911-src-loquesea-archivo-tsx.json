@@ -1,0 +1,12 @@
+{
+  "id": "patch-20260107_041911-src-loquesea-archivo-tsx",
+  "description": "Replace file from clipboard",
+  "enabled": true,
+  "files": [
+    {
+      "path": "src/loquesea/archivo.tsx",
+      "action": "writeFromTemplate",
+      "template": "src/loquesea/archivo.tsx"
+    }
+  ]
+}
