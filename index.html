@@ -1,28 +1,40 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Ares Panel (clean)</title>
-    <style>html,body,#root{height:100%%;margin:0;background:#0a0f14;color:#e8f6f6;font-family:Inter,system-ui,Arial}</style>
-    <link rel="stylesheet" href="/ares-glow.css">
-<!-- NF-OLYMPUS-TECH-ASSETS -->
-  <link rel="stylesheet" href="/nf/olympus_tech.css" />
-  <script type="module" src="/nf/olympus_tech.js"></script>
 
-<!-- NF-MODULES-OVERLAY-ASSETS -->
-<link rel="stylesheet" href="/nf/modules_dashboard.css"/>
-<script type="module" src="/nf/modules_dashboard_v2.js"></script>
-  <link rel="stylesheet" href="/ui-theme.css">\n
+    <title>Ares Panel (clean)</title>
+
+    <!-- Qt WebChannel (solo existe cuando corre dentro del Desktop Shell) -->
+    <script src="qrc:///qtwebchannel/qwebchannel.js"></script>
+
+    <!-- Minimal base styles (SAFE inline) -->
+    <style>
+      html, body, #root {
+        height: 100%;
+        margin: 0;
+        background: #0a0f14;
+        color: #e8f6f6;
+        font-family: Inter, Segoe UI, system-ui, -apple-system, sans-serif;
+      }
+    </style>
+
+    <!-- Olympus / UI assets -->
+    <link rel="stylesheet" href="/nf/ares_glow.css" />
+    <link rel="stylesheet" href="/nf/olympus_tech.css" />
+    <link rel="stylesheet" href="/nf/modules_dashboard.css" />
+    <link rel="stylesheet" href="/ui-theme.css" />
+
+    <!-- Optional legacy modules (if needed) -->
+    <script type="module" src="/nf/olympus_tech.js"></script>
+    <script type="module" src="/nf/modules_dashboard_v2.js"></script>
+  </head>
+
   <body>
     <div id="root"></div>
+
+    <!-- Vite entry -->
     <script type="module" src="/src/main.tsx"></script>
-    <script type="module" src="/quick-inject.js"></script>
-  <script src="/overlay-controls.js"></script>\n
+  </body>
 </html>
-
-
-
-
-
-

@@ -8,33 +8,50 @@ import Olimpo5 from './pages/Olimpo5';
 import { extraNav, extraRoutes } from './routes/register';
 import './styles/overlay-fix.css';
 
+import { initHitechBridge, setDesktopHandler, sendToDesktop } from "./hitechBridge";
+
+setDesktopHandler((type, payload) => {
+  console.log("[DesktopEvent]", type, payload);
+});
+
+initHitechBridge();
+
+window.addEventListener("hitech:desktop-connected", () => {
+  console.log("✅ Desktop connected (front)");
+  sendToDesktop("cmd:1:ping");
+}, { once: true });
+
 const ModulesDashboard = React.lazy(() => import('./pages/ModulesDashboard'));
+const isPagesDeploy =
+  import.meta.env.MODE === 'production' && (import.meta.env as any).PAGES_DEPLOY === 'true';
 
-const isPagesDeploy = import.meta.env.MODE === 'production' && import.meta.env.PAGES_DEPLOY === 'true';
-
-function RouterShell(){
-  const Router = isPagesDeploy ? HashRouter : BrowserRouter; // HashRouter avoids GitHub Pages SPA refresh 404s.
+function RouterShell() {
+  const Router = isPagesDeploy ? HashRouter : BrowserRouter;
   return (
     <Router>
-      <NavBar extra={extraNav}/>
-      <Suspense fallback={<div style={{padding:12}}>Cargando.</div>}>
+      <NavBar extra={extraNav} />
+      <Suspense fallback={<div style={{ padding: 12 }}>Cargando.</div>}>
         <Routes>
-          <Route path="/" element={<Home/>} />
-          <Route path="/modules" element={<ModulesDashboard/>} />
+          <Route path="/" element={<Home />} />
+          <Route path="/modules" element={<ModulesDashboard />} />
           {extraRoutes.map((r, idx) => (
-            <Route key={idx} path={r.path} element={<r.element/>} />
+            <Route key={idx} path={r.path} element={<r.element />} />
           ))}
-          <Route path="*" element={<NotFound/>} />
-          <Route path="/olimpo5" element={<Olimpo5/>} />
+          <Route path="/olimpo5" element={<Olimpo5 />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
     </Router>
   );
 }
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+const rootEl = document.getElementById('root')!;
+const ww: any = window as any;
+if (!ww.__REACT_ROOT__) ww.__REACT_ROOT__ = ReactDOM.createRoot(rootEl);
+ww.__REACT_ROOT__.render(
   <React.StrictMode>
     <RouterShell />
   </React.StrictMode>
 );
+
 

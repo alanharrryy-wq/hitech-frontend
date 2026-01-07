@@ -10,6 +10,7 @@
       "url": "http://127.0.0.1:8000/docs",
       "color": "#00F5D4",
       "healthUrl": "http://127.0.0.1:8000/health",
+      "statusUrl": "mock:ok",
       "demoUrl": "https://petstore.swagger.io/",
       "description": "Panel operativo de ARES. En local se conecta al backend; en demo muestra una vista pública de referencia.",
       "renderMode": "iframe"
@@ -23,6 +24,7 @@
       "url": "http://127.0.0.1:8000/docs",
       "color": "#7C3AED",
       "healthUrl": "http://127.0.0.1:8000/health",
+      "statusUrl": "mock:ok",
       "demoUrl": "https://petstore.swagger.io/",
       "description": "Módulo Olimpo5 (Web). Si no hay backend local, se muestra un panel offline con accesos de demostración.",
       "renderMode": "iframe"

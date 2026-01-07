@@ -1,23 +1,45 @@
 import React from 'react';
-import '../styles/olympus.css';
+import { sendToDesktop } from "../hitechBridge";
+sendToDesktop("cmd:1:ping");
 
 type Props = {
   title: string;
   subtitle?: string;
-  description?: string;
-  children?: React.ReactNode;
   accent?: string;
+  children?: React.ReactNode;
+  footer?: React.ReactNode;
 };
 
-export const OlympusCard: React.FC<Props> = ({title, subtitle, description, children, accent}) => {
+export function OlympusCard({
+  title,
+  subtitle,
+  accent = '#02A7CA',
+  children,
+  footer,
+}: Props): JSX.Element {
   return (
-    <div className="card" style={{borderColor: accent ?? '#334', boxShadow: `0 0 14px ${accent ?? '#223'}55`}}>
-      <div className="card-head">
-        <h3 className="card-title">{title}</h3>
-        {subtitle && <span className="badge">{subtitle}</span>}
+    <div
+      className="olympus-card"
+      style={{
+        borderColor: accent,
+        boxShadow: `0 0 0 1px ${accent}33`,
+      }}
+    >
+      <div className="olympus-card-body">
+        <h3 className="olympus-card-title">{title}</h3>
+
+        {subtitle ? (
+          <p className="olympus-card-subtitle">{subtitle}</p>
+        ) : null}
+
+        {children}
       </div>
-      {description && <p className="card-desc" title={description}>{description}</p>}
-      {children && <div className="card-body">{children}</div>}
+
+      {footer ? (
+        <div className="olympus-card-footer">
+          {footer}
+        </div>
+      ) : null}
     </div>
   );
-};
+}

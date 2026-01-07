@@ -1,230 +1,464 @@
-import React, {useEffect, useRef, useState} from 'react';
-import {loadRegistry, ModuleDef} from '../modules.registry';
-import {OlympusCard} from '../components/OlympusCard';
-import '../styles/olympus.css';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { OlympusCard } from '../components/OlympusCard';
+import { loadRegistry, ModuleDef } from '../modules.registry';
 
-type HealthState = 'checking' | 'online' | 'offline' | 'unknown';
+type Reachability = 'checking' | 'online' | 'offline';
+type LogLevel = 'INFO' | 'WARN' | 'ERROR';
 
-type HealthRecord = {
-  state: HealthState;
-  detail?: string;
-  httpStatus?: number;
-  checkedAt?: number;
+type ActivityEvent = {
+  id: string;
+  ts: number; // epoch ms
+  level: LogLevel;
+  title: string;
+  detail: string;
 };
 
-const HEALTH_TIMEOUT_MS = 2000;
-const MAX_CONCURRENCY = 2;
-const healthCache = new Map<string, HealthRecord>();
 
-function cacheKey(m: ModuleDef) {
-  return `${m.id}|${m.statusUrl ?? ''}`;
+function fmtTime(ts: number): string {
+  const d = new Date(ts);
+  const hh = d.getHours().toString().padStart(2, '0');
+  const mm = d.getMinutes().toString().padStart(2, '0');
+  const ss = d.getSeconds().toString().padStart(2, '0');
+  return `${hh}:${mm}:${ss}`;
 }
 
-function looksOk(body: string) {
-  return body.includes('ok') || body.includes('OK') || body.includes('Ok') || body.includes('"status":"ok"');
+function levelBadgeClass(l: LogLevel): string {
+  if (l === 'INFO') return 'log-badge info';
+  if (l === 'WARN') return 'log-badge warn';
+  return 'log-badge err';
 }
 
-async function pingOnce(url: string, timeoutMs: number): Promise<{ record: HealthRecord; timedOut?: boolean; isSameOrigin: boolean }> {
-  const origin = new URL(url, window.location.href).origin;
-  const isSameOrigin = origin === window.location.origin;
+function pick<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function mkEvent(level?: LogLevel): ActivityEvent {
+  const now = Date.now();
+  const lvl: LogLevel = level ?? pick(['INFO', 'INFO', 'INFO', 'WARN', 'ERROR'] as LogLevel[]);
+
+  const titles: Record<LogLevel, string[]> = {
+    INFO: ['Heartbeat OK', 'Sync completed', 'Cache warmed', 'Module ping', 'UI tick'],
+    WARN: ['Latency spike', 'Retry scheduled', 'Degraded mode', 'Slow endpoint'],
+    ERROR: ['Backend unreachable', 'Auth failed', 'Timeout error', 'Unexpected response'],
+  };
+
+  const details: Record<LogLevel, string[]> = {
+    INFO: [
+      'All systems nominal.',
+      'Background refresh succeeded.',
+      'No anomalies detected.',
+      'Status map updated.',
+    ],
+    WARN: [
+      'Response time above threshold.',
+      'Will re-check in next cycle.',
+      'Falling back to cached status.',
+      'One module is slow to respond.',
+    ],
+    ERROR: [
+      'Request failed. Marking offline.',
+      'Endpoint did not respond in time.',
+      'Network error while fetching health.',
+      'Service returned a non-OK status.',
+    ],
+  };
+
+  return {
+    id: `${now}-${Math.random().toString(16).slice(2)}`,
+    ts: now,
+    level: lvl,
+    title: pick(titles[lvl]),
+    detail: pick(details[lvl]),
+  };
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+async function ping(url: string | undefined, timeoutMs: number = 2300): Promise<'online' | 'offline'> {
+  if (!url) return 'offline';
+
+  // Mock support (fast + deterministic for demos)
+  if (url === 'mock:ok') return 'online';
+  if (url === 'mock:err') return 'offline';
+
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  const t = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const res = await fetch(url, { method: 'GET', mode: 'cors', cache: 'no-store', signal: controller.signal });
-    const checkedAt = Date.now();
-    if (!res.ok) {
-      return { record: { state: 'offline', detail: `HTTP ${res.status}`, httpStatus: res.status, checkedAt }, isSameOrigin };
-    }
-    let body = '';
-    try { body = await res.text(); } catch { body = ''; }
-    if (body && !looksOk(body)) {
-      return { record: { state: 'offline', detail: 'response not ok', httpStatus: res.status, checkedAt }, isSameOrigin };
-    }
-    return { record: { state: 'online', detail: `HTTP ${res.status}`, httpStatus: res.status, checkedAt }, isSameOrigin };
-  } catch (err) {
-    const checkedAt = Date.now();
-    if (err && typeof err === 'object' && (err as { name?: string }).name === 'AbortError') {
-      return {
-        record: { state: isSameOrigin ? 'offline' : 'unknown', detail: 'timeout', checkedAt },
-        timedOut: true,
-        isSameOrigin,
-      };
-    }
-    const message = err instanceof Error ? err.message : String(err);
-    const isCorsLike = /Failed to fetch|CORS|NetworkError|cross-origin|blocked/i.test(message);
-    if (!isSameOrigin && isCorsLike) {
-      return { record: { state: 'unknown', detail: message || 'cors/blocked', checkedAt }, isSameOrigin };
-    }
-    if (!isSameOrigin) {
-      return { record: { state: 'unknown', detail: message || 'unknown error', checkedAt }, isSameOrigin };
-    }
-    return { record: { state: 'offline', detail: message || 'network error', checkedAt }, isSameOrigin };
+    // cache-bust to avoid stale results
+    const sep = url.includes('?') ? '&' : '?';
+    const finalUrl = url + sep + 't=' + Date.now().toString();
+
+    const res = await fetch(finalUrl, {
+      method: 'GET',
+      signal: controller.signal,
+      headers: { 'cache-control': 'no-cache' },
+    });
+
+    // treat any 2xx as online
+    return res.ok ? 'online' : 'offline';
+  } catch {
+    return 'offline';
   } finally {
-    clearTimeout(timeoutId);
+    clearTimeout(t);
   }
 }
 
-async function checkStatus(url: string, timeoutMs: number): Promise<HealthRecord> {
-  const first = await pingOnce(url, timeoutMs);
-  if (first.timedOut && first.isSameOrigin) {
-    const second = await pingOnce(url, timeoutMs);
-    return second.record;
-  }
-  return first.record;
+function statusLabel(s: Reachability): string {
+  if (s === 'online') return 'Online';
+  if (s === 'offline') return 'Offline';
+  return 'Checking…';
 }
 
-function formatTime(ts?: number) {
-  return ts ? new Date(ts).toLocaleTimeString() : '—';
+function statusClass(s: Reachability): string {
+  if (s === 'online') return 'badge ok';
+  if (s === 'offline') return 'badge err';
+  return 'badge wait';
 }
 
-function badgeTitle(record?: HealthRecord) {
-  const time = formatTime(record?.checkedAt);
-  const reason = record?.detail ?? (record?.state === 'checking' ? 'checking' : '—');
-  return `Last check: ${time}
-Reason: ${reason}`;
-}
-
-export default function ModulesDashboard(){
+export default function ModulesDashboard(): JSX.Element {
   const [mods, setMods] = useState<ModuleDef[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [health, setHealth] = useState<Record<string, HealthRecord>>({});
-  const [checkNonce, setCheckNonce] = useState(0);
-  const runIdRef = useRef(0);
-  const modulesConfigUrl = `${import.meta.env.BASE_URL}modules.config.json`;
+  const [activity, setActivity] = useState<ActivityEvent[]>(() => {
+  // start with a few entries
+  return [mkEvent('INFO'), mkEvent('INFO'), mkEvent('WARN')].reverse();
+});
+const [paused, setPaused] = useState<boolean>(false);
 
-  useEffect(()=>{
-    let active = true;
-    setLoading(true);
-    setError(null);
-    loadRegistry({ strict: true })
-      .then((list) => {
-        if (!active) return;
-        setMods(list);
+const activityTimerRef = useRef<number | null>(null);
+const activityWrapRef = useRef<HTMLDivElement | null>(null);
+
+  const [status, setStatus] = useState<Record<string, Reachability>>({});
+  const [loading, setLoading] = useState<boolean>(true);
+  const [lastCheck, setLastCheck] = useState<number>(0);
+
+  const refreshTimerRef = useRef<number | null>(null);
+
+  const enabledMods = useMemo(() => mods.filter((m) => (m as any).enabled !== false), [mods]);
+
+  async function refreshStatuses(currentMods: ModuleDef[]): Promise<void> {
+    if (!currentMods.length) return;
+
+    // set all to checking first (instant feedback)
+    const checking: Record<string, Reachability> = {};
+    for (const m of currentMods) checking[m.id] = 'checking';
+    setStatus(checking);
+
+    // run in parallel
+    const pairs = await Promise.all(
+      currentMods.map(async (m) => {
+        const s = await ping((m as any).statusUrl || (m as any).healthUrl, 2300);
+        return [m.id, s] as const;
       })
-      .catch((err) => {
-        if (!active) return;
-        setError(err instanceof Error ? err.message : String(err));
+    );
+
+    const next: Record<string, Reachability> = {};
+    for (const [id, s] of pairs) next[id] = s;
+    setStatus(next);
+    setLastCheck(Date.now());
+  }
+
+  useEffect(() => {
+    let alive = true;
+
+    async function boot(): Promise<void> {
+      setLoading(true);
+      try {
+        const list = await loadRegistry();
+        if (!alive) return;
+        setMods(list || []);
+        // first refresh
+        await refreshStatuses(list || []);
+      } catch {
+        if (!alive) return;
         setMods([]);
-      })
-      .finally(() => {
-        if (!active) return;
+        setStatus({});
+      } finally {
+        if (!alive) return;
         setLoading(false);
-      });
-    return () => { active = false; };
+      }
+    }
+
+    boot();
+
+    return () => {
+      alive = false;
+    };
   }, []);
 
   useEffect(() => {
-    if (!mods.length) { setHealth({}); return; }
-    runIdRef.current += 1;
-    const runId = runIdRef.current;
-    let active = true;
-    const queue: ModuleDef[] = [];
-    const next: Record<string, HealthRecord> = {};
+    // auto-refresh every 5 seconds after modules are loaded
+    if (!enabledMods.length) return;
 
-    for (const m of mods) {
-      const key = cacheKey(m);
-      if (!m.statusUrl) {
-        const record = { state: 'unknown', detail: 'no statusUrl', checkedAt: Date.now() } as HealthRecord;
-        next[m.id] = record;
-        healthCache.set(key, record);
-        continue;
-      }
-      const cached = healthCache.get(key);
-      if (cached) {
-        next[m.id] = cached;
-        continue;
-      }
-      next[m.id] = { state: 'checking' };
-      queue.push(m);
+    if (refreshTimerRef.current !== null) {
+      window.clearInterval(refreshTimerRef.current);
+      refreshTimerRef.current = null;
     }
 
-    setHealth(next);
-    if (!queue.length) return () => { active = false; };
+    refreshTimerRef.current = window.setInterval(() => {
+      refreshStatuses(enabledMods);
+    }, 5000);
 
-    let i = 0;
-    const workers = Array.from({ length: MAX_CONCURRENCY }, async () => {
-      while (i < queue.length) {
-        const m = queue[i++];
-        if (!m.statusUrl) continue;
-        const record = await checkStatus(m.statusUrl, HEALTH_TIMEOUT_MS);
-        if (!active || runIdRef.current !== runId) return;
-        healthCache.set(cacheKey(m), record);
-        setHealth((prev) => ({ ...prev, [m.id]: record }));
+    return () => {
+      if (refreshTimerRef.current !== null) {
+        window.clearInterval(refreshTimerRef.current);
+        refreshTimerRef.current = null;
       }
-    });
+    };
+    // enabledMods changes only when registry changes (memo), safe dependency
+  }, [enabledMods]);
 
-    Promise.all(workers).catch(() => {});
-    return () => { active = false; };
-  }, [mods, checkNonce]);
-
-  const handleRecheck = () => {
-    healthCache.clear();
-    setCheckNonce((n) => n + 1);
-  };
+  const lastCheckText = useMemo(() => {
+    if (!lastCheck) return '—';
+    const d = new Date(lastCheck);
+    const hh = d.getHours().toString().padStart(2, '0');
+    const mm = d.getMinutes().toString().padStart(2, '0');
+    const ss = d.getSeconds().toString().padStart(2, '0');
+    return hh + ':' + mm + ':' + ss;
+  }, [lastCheck]);
 
   return (
-    <div style={{padding:'24px'}}>
-      <div style={{maxWidth:1200, margin:'0 auto'}}>
-        <h1 style={{margin:'10px 0 6px'}}>Módulos - Sharon Olympus</h1>
-        <p style={{opacity:.75, margin:'0 0 12px'}}>Panel de módulos activos y su estado actual.</p>
-        <div style={{display:'flex', gap:12, margin:'0 0 16px'}}>
-          <button type="button" className="btn" onClick={handleRecheck}>Re-check statuses</button>
+    <div className="olympus-page">
+      <div className="olympus-header">
+        <div>
+          <h1 className="olympus-title">Modules</h1>
+          <p className="olympus-subtitle">
+            Dashboard interno (mock-friendly). Estados refrescan cada 5s. Último check: <b>{lastCheckText}</b>
+          </p>
         </div>
 
-        {loading && (
-          <p style={{opacity:.8, marginBottom: 12}}>Cargando módulos...</p>
-        )}
-
-        {error && (
-          <div style={{border:'1px solid #2b2b2b', borderRadius:12, padding:12, background:'rgba(255,255,255,0.02)', marginBottom:16}}>
-            <div style={{fontWeight:600, marginBottom:6}}>
-              No se pudo cargar modules.config.json. Verifica la ruta, GitHub Pages base-path, o si estás en local corre RUN_Local.ps1.
-            </div>
-            <details>
-              <summary style={{cursor:'pointer'}}>Detalles</summary>
-              <div style={{fontSize:12, opacity:.7, marginTop:6}}>{error}</div>
-            </details>
-          </div>
-        )}
-
-        {!loading && !error && mods.length === 0 && (
-          <div style={{border:'1px solid #2b2b2b', borderRadius:12, padding:12, background:'rgba(255,255,255,0.02)', marginBottom:16}}>
-            <div style={{marginBottom:8}}>No hay módulos habilitados.</div>
-            <a className="btn" href={modulesConfigUrl}>Editar modules.config.json</a>
-          </div>
-        )}
-
-        {!loading && !error && mods.length > 0 && (
-          <div className="olympus-panel neon">
-            <div className="grid">
-              {mods.map(m => {
-                const record = health[m.id];
-                const state = record?.state ?? 'unknown';
-                const badgeClass = state === 'online'
-                  ? 'badge ok'
-                  : state === 'offline'
-                    ? 'badge err'
-                    : state === 'checking'
-                      ? 'badge checking'
-                      : 'badge unknown';
-                const badgeText = state === 'checking' ? 'checking...' : state;
-                return (
-                  <OlympusCard key={m.id} title={m.name} subtitle={m.type.toUpperCase()} accent={m.accent} description={m.description}>
-                    <div className="card-actions">
-                      <span className={badgeClass} title={badgeTitle(record)}>{badgeText}</span>
-                      {m.route && <a className="btn" href={m.route}>Abrir</a>}
-                    </div>
-                  </OlympusCard>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        <p style={{opacity:.7, marginTop:12}}>Tip: edita <code>public/modules.config.json</code> para sumar módulos.</p>
+        <div className="olympus-actions">
+          <button
+            className="btn"
+            onClick={async () => {
+              // tiny UX: show quick feedback
+              setLoading(true);
+              await sleep(120);
+              await refreshStatuses(enabledMods);
+              setLoading(false);
+            }}
+          >
+            Refresh now
+          </button>
+        </div>
       </div>
+
+      {loading && (
+        <div className="olympus-loading">
+          <span className="badge wait">Loading…</span>
+        </div>
+      )}
+
+      <div className="olympus-grid">
+        {enabledMods.map((m) => {
+          const s = status[m.id] || 'checking';
+          const desc = (m as any).description || '';
+          const route = (m as any).route || '/modules';
+          const demoUrl = (m as any).demoUrl || '';
+          const url = (m as any).url || '';
+
+          return (
+            <OlympusCard
+              key={m.id}
+              title={m.name}
+              subtitle={desc}
+              accent={(m as any).color || (m as any).accent || '#02A7CA'}
+              footer={
+                <div className="card-footer">
+                  <Link className="btn" to={route}>
+                    Abrir
+                  </Link>
+
+                  {demoUrl ? (
+                    <a className="btn ghost" href={demoUrl} target="_blank" rel="noreferrer">
+                      Demo
+                    </a>
+                  ) : null}
+
+                  {url ? (
+                    <a className="btn ghost" href={url} target="_blank" rel="noreferrer">
+                      URL
+                    </a>
+                  ) : null}
+                </div>
+              }
+            />
+          );
+        })}
+      </div>
+<div className="live-panel">
+  <div className="live-head">
+    <div>
+      <div className="live-title">Live Activity</div>
+      <div className="live-sub">Mock events. No real data. Updates ~every 1.2s.</div>
+    </div>
+
+    <div className="live-actions">
+      <button className="btn ghost" onClick={() => setPaused((p) => !p)}>
+        {paused ? 'Resume' : 'Pause'}
+      </button>
+
+      <button className="btn ghost" onClick={() => setActivity([])}>
+        Clear
+      </button>
+
+      <button
+        className="btn"
+        onClick={() => setActivity((prev) => [mkEvent('ERROR'), ...prev].slice(0, 18))}
+        title="Inject a red event to test visual severity"
+      >
+        Inject Error
+      </button>
+    </div>
+  </div>
+
+  <div className="live-body" ref={activityWrapRef}>
+    {activity.length === 0 ? (
+      <div className="live-empty">No events. (Clear + silence vibes)</div>
+    ) : (
+      activity.map((e) => (
+        <div key={e.id} className="live-row">
+          <span className={levelBadgeClass(e.level)}>{e.level}</span>
+          <span className="live-time">{fmtTime(e.ts)}</span>
+          <span className="live-main">
+            <b>{e.title}</b>
+            <span className="live-detail">{e.detail}</span>
+          </span>
+        </div>
+      ))
+    )}
+  </div>
+</div>
+
+      {/* Minimal CSS fallback (in case olympus.css doesn't define these helpers) */}
+      <style>{`
+      .live-panel{
+  margin-top: 14px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.04);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.live-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap: 14px;
+  padding: 12px 12px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  background: rgba(0,0,0,.14);
+}
+
+.live-title{
+  font-weight: 700;
+  letter-spacing: .2px;
+}
+
+.live-sub{
+  margin-top: 4px;
+  opacity: .75;
+  font-size: 12px;
+}
+
+.live-actions{
+  display:flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content:flex-end;
+}
+
+.live-body{
+  padding: 10px 12px;
+  max-height: 260px;
+  overflow:auto;
+}
+
+.live-row{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  padding: 8px 8px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.06);
+  background: rgba(255,255,255,.03);
+  margin-bottom: 8px;
+}
+
+.live-row:hover{
+  background: rgba(255,255,255,.05);
+  border-color: rgba(255,255,255,.10);
+}
+
+.log-badge{
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.10);
+  min-width: 56px;
+  text-align:center;
+}
+
+.log-badge.info{
+  background: rgba(2,167,202,.10);
+  border-color: rgba(2,167,202,.30);
+  color: rgba(190,245,255,.95);
+}
+
+.log-badge.warn{
+  background: rgba(255,200,80,.10);
+  border-color: rgba(255,200,80,.35);
+  color: rgba(255,235,190,.95);
+}
+
+.log-badge.err{
+  background: rgba(255,90,120,.10);
+  border-color: rgba(255,90,120,.35);
+  color: rgba(255,190,200,.95);
+}
+
+.live-time{
+  font-variant-numeric: tabular-nums;
+  opacity: .70;
+  min-width: 72px;
+}
+
+.live-main{
+  display:flex;
+  flex-direction:column;
+  gap: 2px;
+}
+
+.live-detail{
+  opacity: .75;
+  font-size: 12px;
+}
+
+.live-empty{
+  padding: 18px;
+  opacity: .75;
+}
+
+        .olympus-page { padding: 16px; }
+        .olympus-header { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom: 14px; }
+        .olympus-title { margin:0; font-size: 22px; }
+        .olympus-subtitle { margin:6px 0 0; opacity: .85; }
+        .olympus-actions { display:flex; gap:10px; }
+        .olympus-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px; }
+        .olympus-loading { margin: 10px 0 12px; }
+
+        .badge { display:inline-flex; align-items:center; gap:6px; padding: 4px 10px; border-radius: 999px; font-size: 12px; border: 1px solid rgba(255,255,255,.12); }
+        .badge.ok { background: rgba(40, 220, 140, .12); color: rgba(160, 255, 220, .95); border-color: rgba(40, 220, 140, .35); }
+        .badge.err { background: rgba(255, 90, 120, .10); color: rgba(255, 190, 200, .95); border-color: rgba(255, 90, 120, .35); }
+        .badge.wait { background: rgba(2, 167, 202, .10); color: rgba(190, 245, 255, .95); border-color: rgba(2, 167, 202, .35); }
+
+        .card-footer { display:flex; gap:8px; flex-wrap: wrap; }
+        .btn { cursor:pointer; user-select:none; border-radius: 10px; padding: 8px 10px; border: 1px solid rgba(255,255,255,.10); background: rgba(255,255,255,.06); color: inherit; text-decoration:none; display:inline-flex; align-items:center; }
+        .btn:hover { background: rgba(255,255,255,.10); border-color: rgba(255,255,255,.16); }
+        .btn.ghost { background: transparent; }
+      `}</style>
     </div>
   );
 }
