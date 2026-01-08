@@ -1,28 +1,28 @@
 <!doctype html>
-<html>
+<html lang="es">
   <head>
+    <base href="%BASE_URL%">
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Ares Panel (clean)</title>
-    <style>html,body,#root{height:100%%;margin:0;background:#0a0f14;color:#e8f6f6;font-family:Inter,system-ui,Arial}</style>
-    <link rel="stylesheet" href="/ares-glow.css">
-<!-- NF-OLYMPUS-TECH-ASSETS -->
-  <link rel="stylesheet" href="/nf/olympus_tech.css" />
-  <script type="module" src="/nf/olympus_tech.js"></script>
 
-<!-- NF-MODULES-OVERLAY-ASSETS -->
-<link rel="stylesheet" href="/nf/modules_dashboard.css"/>
-<script type="module" src="/nf/modules_dashboard_v2.js"></script>
-  <link rel="stylesheet" href="/ui-theme.css">\n
+    <!-- Public assets (BASE-safe para GitHub Pages) -->
+    <link rel="stylesheet" href="%BASE_URL%ares-glow.css" />
+    <link rel="stylesheet" href="%BASE_URL%nf/olympus_tech.css" />
+    <link rel="stylesheet" href="%BASE_URL%nf/modules_dashboard.css" />
+    <link rel="stylesheet" href="%BASE_URL%ui-theme.css" />
+  </head>
+
   <body>
     <div id="root"></div>
+
+    <!-- Vite entry (sí va como module) -->
     <script type="module" src="/src/main.tsx"></script>
-    <script type="module" src="/quick-inject.js"></script>
-  <script src="/overlay-controls.js"></script>\n
+
+    <!-- Public JS: NO module (si lo pones module, Vite se enoja porque está en /public) -->
+    <script src="%BASE_URL%nf/olympus_tech.js"></script>
+    <script src="%BASE_URL%nf/modules_dashboard_v2.js"></script>
+    <script src="%BASE_URL%quick-inject.js"></script>
+    <script src="%BASE_URL%overlay-controls.js"></script>
+  </body>
 </html>
-
-
-
-
-
-

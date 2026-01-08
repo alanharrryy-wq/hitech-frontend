@@ -7,3 +7,38 @@ npm-debug.log*
 pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# --- HITECH: local backups / dumps ---
+*.bak_*
+*.bak
+scripts/hitech-templates/Patches/*.bak_*
+scripts/hitech-templates/*.bak_*
+scripts/hitech-templates/**/*.bak_*
+_DUMPS/
+._for_review/
+HITECH_PATCH.ps1
+package-lock-*.json
+public/nf/*-Alaienware.*
+src/**/*-Alaienware.*
+
+
+# --- HITECH: generated flags / local artifacts ---
+scripts/hitech-templates/.engine-*.applied.flag
+scripts/hitech-templates/*.manualbak_*
+scripts/hitech-templates/templates/*.precut_*
+scripts/hitech-templates/templates/**/*.precut_*
+scripts/hitech-templates/templates/**/Patches/**/*.bak_*
+
+# --- HITECH: local folders not for git ---
+docs/
+public/demos/
+src/components/ui/
+src/loquesea/
+src/styles/tokens.css
+
+# Hitech templates patcher - generated junk
+scripts/hitech-templates/.engine-*.applied.flag
+**/*.bak_*
+**/*.manualbak_*
+**/*.precut_*
+.hitech-patcher/

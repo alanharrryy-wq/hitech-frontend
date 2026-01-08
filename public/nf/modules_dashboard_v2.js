@@ -1,4 +1,4 @@
-﻿// Modules UI v2 â€” FAB + Panel con controles de Glow/Color global y por card
+// Modules UI v2 â€” FAB + Panel con controles de Glow/Color global y por card
 const storageKey = 'NFModulesUI_v2_prefs';
 function savePrefs(p){ localStorage.setItem(storageKey, JSON.stringify(p)); }
 function loadPrefs(){
@@ -78,3 +78,4 @@ async function loadConfig(){
   }catch(e){ console.warn('[ModulesUI v2] config error', e); }
 }
 loadConfig();
+

@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "rules": [
+    {
+      "id": "ps-appendline-fence-singlequotes",
+      "description": "PowerShell: evita ParserError reemplazando AppendLine(\"```\") por AppendLine('```').",
+      "enabled": true,
+      "appliesTo": {
+        "extensions": [".ps1", ".psm1"]
+      },
+      "type": "replaceRegex",
+      "pattern": "AppendLine\\(\"```\"\\)",
+      "flags": "g",
+      "replace": "AppendLine('```')"
+    }
+  ]
+}
